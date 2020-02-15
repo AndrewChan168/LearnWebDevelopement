@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>React! React! React!</title>
+        <script src="https://unpkg.com/react@16/umd/react.development.js"></script>
+        <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+        <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/4.0.5/redux.min.js"></script>
+        <style></style>
+    </head>
+
+    <body>
+        <script type="text/babel">
+            console.clear();
+
+            /** Action Creators */
+            const createPolicy = (name, amount)=>{
+                /** return action */
+                return{
+                    type:'CREATE_POLICY',
+                    payload: { name,amount },
+                };
+            };
+
+            const deletePolicy = (name)=>{
+                return{
+                    type:"DELETE_POLICY",
+                    payload: { name },
+                };
+            };
+
+            const createClaim = (name, amountOfMonryToCollect)=>{
+                return{
+                    type: "CREATE_CLAIM",
+                    payload: { name,amountOfMonryToCollect },
+                };
+            };
+
+            /** reducers */
+            const claimsHistory = (oldListOfClaims=[],action)=>{
+                if(action.type==="CREATE_CLAIM"){
+                    return [...oldListOfClaims, action.payload];
+                }
+                return oldListOfClaims;
+            };
+
+            const accounting = (bagOfMoney=100, action)=>{
+                if(action.type==="CREATE_CLAIM"){
+                    return bagOfMoney - action.payload.amountOfMonryToCollect;
+                }else if(action.type==="CREATE_POLICY"){
+                    return bagOfMoney + action.payload.amount;
+                }
+                return bagOfMoney;
+            }
+
+            const policies = (listOfPolicies=[],action)=>{
+                if(action.type==="CREATE_POLICY"){
+                    return [...listOfPolicies, action.payload.name];
+                }else if(action.type==="DELETE_POLICY"){
+                    return listOfPolicies.filter(policy=>policy!=action.payload.name);
+                }
+                return listOfPolicies;
+            }
+
+            const { createStore,combineReducers } = Redux;
+
+            const ourDepartments = combineReducers({
+                accounting:accounting,
+                claimsHistory:claimsHistory,
+                policies:policies,
+            });
+
+            const store = createStore(ourDepartments);
+
+            console.log(store);
+
+            store.dispatch(createPolicy('Andrew', 100));
+            console.log(store.getState());
+            /*
+                {
+                    accounting:200,
+                    claimsHistory:[],
+                    policies:["Andrew"],
+                }
+            */
+
+            store.dispatch(createPolicy('Victoria', 50));
+            store.dispatch(createPolicy('Elvis', 1000));
+            console.log(store.getState());
+            /*
+                {
+                    accounting:1250,
+                    claimsHistory:[],
+                    policies:["Andrew", "Victoria", "Elvis"],
+                }
+            */
+            store.dispatch(createClaim('Andrew', 200));
+            console.log(store.getState());
+            /*
+                {
+                    accounting:1250,
+                    claimsHistory:[{name: "Andrew", amountOfMonryToCollect: 200}],
+                    policies:["Andrew", "Victoria", "Elvis"],
+                }
+            */
+
+            store.dispatch(deletePolicy('Victoria'));
+            console.log(store.getState());
+            /*
+                {
+                    accounting:1250,
+                    claimsHistory:[{name: "Andrew", amountOfMonryToCollect: 200}],
+                    policies:["Andrew", "Elvis"],
+                }
+            */
+        </script>
+    </body>
+</html>
